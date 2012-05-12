@@ -5,6 +5,7 @@ define('APPLICATION_ENV', (getenv('APPLICATION_ENV') ? getenv('APPLICATION_ENV')
 require_once 'Zend/Rest/Server.php';
 require_once 'Zend/Config/Ini.php';
 require_once '../model/kv.class.php';
+require_once '../model/pair.class.php';
 require_once 'Zend/Oauth/Token/Access.php';
 require_once 'Zend/Service/Twitter.php';
 require_once 'Zend/Db/Expr.php';
@@ -29,13 +30,24 @@ class HappyDinnerAPI
     public function setkvs($key, $value){
         $kv = new KV;
         try {
-             $kv->insert(array('key' => $key, 'value' => $value));
+            $kv->insert(array('key' => $key, 'value' => $value));
         } catch ( Exception $e ){
-             // insert 失敗時は update することで upsert を実現
-             $where = $kv->getAdapter()->quoteInto('`key` = ?', $key);
-             $kv->update(array('value' => $value), $where);
+            // insert 失敗時は update することで upsert を実現
+            $where = $kv->getAdapter()->quoteInto('`key` = ?', $key);
+            $kv->update(array('value' => $value), $where);
         }
+    }
 
+    public function registerPair($fbId, $partnerId){
+        $pair = new Pair;
+
+        try {
+             $pair->insert(array('fb_id' => $fbId, 'partner_id' => $partnerId));
+        } catch ( Exception $e ){
+            // @todo 二重登録されたとき: ハンドリングせずにupdate
+            $where = $pair->getAdapter()->quoteInto('`fb_id` = ?', $fbId);
+            $pair->update(array('partner_id' => $partnerId), $where);
+        }
     }
 }
 
