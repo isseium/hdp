@@ -6,6 +6,8 @@ require_once 'Zend/Rest/Server.php';
 require_once 'Zend/Config/Ini.php';
 require_once '../model/kv.class.php';
 require_once '../model/pair.class.php';
+require_once '../model/Category.class.php';
+require_once '../model/wantToEatCategory.class.php';
 require_once 'Zend/Oauth/Token/Access.php';
 require_once 'Zend/Service/Twitter.php';
 require_once 'Zend/Db/Expr.php';
@@ -47,6 +49,19 @@ class HappyDinnerAPI
             // @todo 二重登録されたとき: ハンドリングせずにupdate
             $where = $pair->getAdapter()->quoteInto('`fb_id` = ?', $fbId);
             $pair->update(array('partner_id' => $partnerId), $where);
+        }
+    }
+
+    public function setCategory($fbId, $categoryId){
+        $category = new wantToEatCategory();
+
+        try {
+            $category->insert(array('date' => (new Zend_Db_Expr('current_date')), 'fb_id' => $fbId, 'category_id' => $categoryId));
+        } catch ( Exception $e ){
+            // @todo 二重登録されたとき: ハンドリングせずにupdate
+            // @todo 主キーもっとある
+            $where = $category->getAdapter()->quoteInto('`fb_id` = ? AND date = current_date ', $fbId);
+            $category->update(array('category_id' => $categoryId), $where);
         }
     }
 }
